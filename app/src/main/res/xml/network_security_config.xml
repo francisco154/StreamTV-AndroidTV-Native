@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">edge02.radiohdvivo.com</domain>
+        <domain includeSubdomains="true">streaming2.locucionar.com</domain>
+        <domain includeSubdomains="true">cdn.instream.audio</domain>
+        <domain includeSubdomains="true">radio01.ferozo.com</domain>
+        <domain includeSubdomains="true">streaming1.locucionar.com</domain>
+        <domain includeSubdomains="true">streaming.escuchanosonline.com</domain>
+        <domain includeSubdomains="true">live.lu5am.com</domain>
+        <domain includeSubdomains="true">streaming01.shockmedia.com.ar</domain>
+        <domain includeSubdomains="true">playerservices.streamtheworld.com</domain>
+        <domain includeSubdomains="true">ice2.edge-apps.net</domain>
+    </domain-config>
+</network-security-config>

@@ -1,0 +1,72 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.streamtv.app'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId "com.streamtv.app"
+        minSdk 21
+        targetSdk 36
+        versionCode 6
+        versionName "2.0"
+    }
+
+    signingConfigs {
+        release {
+            storeFile file('../streamtv-release.keystore')
+            storePassword 'streamtv123'
+            keyAlias 'streamtv'
+            keyPassword 'streamtv123'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+        }
+        debug {
+            minifyEnabled false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+
+    // Fix for ExoPlayer native libs
+    packagingOptions {
+        exclude 'META-INF/DEPENDENCIES'
+    }
+}
+
+dependencies {
+    implementation 'androidx.core:core:1.15.0'
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'androidx.leanback:leanback:1.2.0-alpha04'
+    implementation 'androidx.leanback:leanback-preference:1.2.0-alpha04'
+    implementation 'androidx.constraintlayout:constraintlayout:2.2.0'
+    implementation 'androidx.cardview:cardview:1.0.0'
+    implementation 'androidx.recyclerview:recyclerview:1.4.0'
+    implementation 'androidx.palette:palette:1.0.0'
+
+    // ExoPlayer (Media3) - handles ALL stream formats
+    implementation 'androidx.media3:media3-exoplayer:1.6.0'
+    implementation 'androidx.media3:media3-exoplayer-hls:1.6.0'
+    implementation 'androidx.media3:media3-ui:1.6.0'
+    implementation 'androidx.media3:media3-session:1.6.0'
+
+    // Networking
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    implementation 'com.google.code.gson:gson:2.11.0'
+
+    // Image loading - Glide with OkHttp integration for redirect handling
+    implementation 'com.github.bumptech.glide:glide:4.16.0'
+    implementation 'com.github.bumptech.glide:okhttp3-integration:4.16.0'
+    annotationProcessor 'com.github.bumptech.glide:compiler:4.16.0'
+}

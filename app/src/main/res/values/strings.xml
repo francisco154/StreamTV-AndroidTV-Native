@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">StreamTV</string>
+    <string name="login_title">StreamTV</string>
+    <string name="login_subtitle">Iniciar Sesión</string>
+    <string name="hint_username">Usuario</string>
+    <string name="hint_password">Contraseña</string>
+    <string name="btn_login">INGRESAR</string>
+    <string name="login_error">Usuario o contraseña incorrectos</string>
+    <string name="loading">Cargando…</string>
+    <string name="now_playing">Reproduciendo</string>
+    <string name="play">Reproducir</string>
+    <string name="pause">Pausar</string>
+    <string name="stop">Detener</string>
+    <string name="stations">Emisoras</string>
+    <string name="demos">Demos</string>
+    <string name="error_connection">Error de conexión</string>
+    <string name="error_stream">Error al reproducir stream</string>
+</resources>
