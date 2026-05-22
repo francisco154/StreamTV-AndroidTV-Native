@@ -9,6 +9,8 @@
         <item name="android:navigationBarColor">@color/bg_dark</item>
         <item name="android:windowFullscreen">true</item>
         <item name="android:windowContentOverlay">@null</item>
+        <!-- Disable default focus highlight for ALL views in this theme -->
+        <item name="android:defaultFocusHighlightEnabled">false</item>
     </style>
 
     <style name="Theme.StreamTV.Splash" parent="Theme.AppCompat.NoActionBar">
@@ -17,6 +19,42 @@
         <item name="android:windowContentOverlay">@null</item>
         <item name="android:statusBarColor">@color/bg_dark</item>
         <item name="android:navigationBarColor">@color/bg_dark</item>
+        <item name="android:defaultFocusHighlightEnabled">false</item>
+    </style>
+
+    <!-- Circular floating button style - NO rectangles, NO elevation shadows -->
+    <style name="StreamTVCircleButton" parent="Widget.AppCompat.ImageButton">
+        <item name="android:background">@drawable/btn_control_round</item>
+        <item name="android:scaleType">center</item>
+        <item name="android:focusable">true</item>
+        <item name="android:clickable">true</item>
+        <item name="android:defaultFocusHighlightEnabled">false</item>
+        <!-- Kill ALL rectangular shadows/highlights -->
+        <item name="android:stateListAnimator">@null</item>
+        <item name="android:outlineProvider">none</item>
+        <item name="android:clipToOutline">false</item>
+        <item name="android:elevation">0dp</item>
+        <item name="android:translationZ">0dp</item>
+        <!-- No foreground drawable that could draw a rectangle -->
+        <item name="android:foreground">@null</item>
+    </style>
+
+    <!-- Small circle button for now-playing bar -->
+    <style name="StreamTVCircleButton.Small">
+        <item name="android:layout_width">32dp</item>
+        <item name="android:layout_height">32dp</item>
+    </style>
+
+    <!-- Medium circle button for player controls -->
+    <style name="StreamTVCircleButton.Medium">
+        <item name="android:layout_width">56dp</item>
+        <item name="android:layout_height">56dp</item>
+    </style>
+
+    <!-- Large circle button for play/pause -->
+    <style name="StreamTVCircleButton.Large">
+        <item name="android:layout_width">72dp</item>
+        <item name="android:layout_height">72dp</item>
     </style>
 
     <style name="StreamTVCard">

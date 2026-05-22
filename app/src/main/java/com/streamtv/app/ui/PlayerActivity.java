@@ -1,11 +1,13 @@
 package com.streamtv.app.ui;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.ViewOutlineProvider;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -65,10 +67,15 @@ public class PlayerActivity extends AppCompatActivity implements AudioService.Pl
         audioService.setStateListener(this);
         favoritesManager = FavoritesManager.getInstance(this);
 
+        // KILL ALL RECTANGULAR HIGHLIGHTS - force circular outline on every button
+        setupCircularButton(btnPlayPause, 1.15f);
+        setupCircularButton(btnPrevious, 1.15f);
+        setupCircularButton(btnNext, 1.15f);
+        setupCircularButton(btnFavorite, 1.15f);
+
         // Get current station from holder
         currentStation = StationListHolder.getCurrentStation();
         if (currentStation == null) {
-            // Fallback: get from intent extras
             currentStation = buildStationFromIntent();
         }
 
@@ -79,34 +86,11 @@ public class PlayerActivity extends AppCompatActivity implements AudioService.Pl
         // Update play/pause button
         updatePlayPauseButton();
 
-        // Play/pause click
+        // Button click listeners
         btnPlayPause.setOnClickListener(v -> togglePlayPause());
-        btnPlayPause.setOnFocusChangeListener((v, hasFocus) -> {
-            float scale = hasFocus ? 1.12f : 1.0f;
-            btnPlayPause.animate().scaleX(scale).scaleY(scale).setDuration(200).start();
-        });
-
-        // Previous button
         btnPrevious.setOnClickListener(v -> playPrevious());
-        btnPrevious.setOnFocusChangeListener((v, hasFocus) -> {
-            float scale = hasFocus ? 1.12f : 1.0f;
-            btnPrevious.animate().scaleX(scale).scaleY(scale).setDuration(200).start();
-        });
-
-        // Next button
         btnNext.setOnClickListener(v -> playNext());
-        btnNext.setOnFocusChangeListener((v, hasFocus) -> {
-            float scale = hasFocus ? 1.12f : 1.0f;
-            btnNext.animate().scaleX(scale).scaleY(scale).setDuration(200).start();
-        });
-
-        // Favorite button
-        updateFavoriteButton();
         btnFavorite.setOnClickListener(v -> toggleFavorite());
-        btnFavorite.setOnFocusChangeListener((v, hasFocus) -> {
-            float scale = hasFocus ? 1.12f : 1.0f;
-            btnFavorite.animate().scaleX(scale).scaleY(scale).setDuration(200).start();
-        });
 
         // Update station counter
         updateStationCounter();
@@ -117,6 +101,60 @@ public class PlayerActivity extends AppCompatActivity implements AudioService.Pl
                 tvStatus.setText("En vivo");
             }
         }, 3000);
+    }
+
+    /**
+     * Force a circular outline and eliminate ALL rectangular highlights.
+     * This is the KEY method that kills the rectangle:
+     * - Sets outlineProvider to NONE (no system outline)
+     * - Disables default focus highlight
+     * - Removes stateListAnimator (Material shadows)
+     * - Sets circular clip outline for the background
+     * - Adds smooth scale animation on focus
+     */
+    private void setupCircularButton(ImageButton btn, float focusScale) {
+        // Kill default Android TV focus highlight rectangle
+        btn.setDefaultFocusHighlightEnabled(false);
+
+        // Kill Material stateListAnimator (causes rectangular elevation shadow)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            btn.setStateListAnimator(null);
+            btn.setOutlineProvider(ViewOutlineProvider.BOUNDS);
+            // Set elevation to 0 to prevent shadow rectangle
+            btn.setElevation(0f);
+            btn.setTranslationZ(0f);
+        }
+
+        // Set circular clip outline matching the button's oval background
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            btn.setClipToOutline(true);
+            btn.setOutlineProvider(new ViewOutlineProvider() {
+                @Override
+                public void getOutline(View view, android.graphics.Outline outline) {
+                    int w = view.getWidth();
+                    int h = view.getHeight();
+                    if (w > 0 && h > 0) {
+                        // Use the smaller dimension for a perfect circle
+                        int r = Math.min(w, h) / 2;
+                        outline.setOval(0, 0, r * 2, r * 2);
+                    }
+                }
+            });
+        }
+
+        // Focus change: only scale + slight alpha, NO rectangles
+        btn.setOnFocusChangeListener((v, hasFocus) -> {
+            float scale = hasFocus ? focusScale : 1.0f;
+            v.animate()
+                    .scaleX(scale)
+                    .scaleY(scale)
+                    .alpha(hasFocus ? 1.0f : 0.7f)
+                    .setDuration(200)
+                    .start();
+        });
+
+        // Start with dimmed unfocused state
+        btn.setAlpha(0.7f);
     }
 
     /**
@@ -132,7 +170,6 @@ public class PlayerActivity extends AppCompatActivity implements AudioService.Pl
         station.setDescription(getIntent().getStringExtra("description"));
         station.setFrequency(getIntent().getStringExtra("frequency"));
         station.setLocation(getIntent().getStringExtra("location"));
-        // Try to get subtitle from extras
         String subtitle = getIntent().getStringExtra("subtitle");
         if (subtitle != null) station.setArtist(subtitle);
         return station;
@@ -142,10 +179,8 @@ public class PlayerActivity extends AppCompatActivity implements AudioService.Pl
      * Load all UI elements for a given station
      */
     private void loadStationUI(Station station) {
-        // Set title
         if (station.getName() != null) tvPlayerTitle.setText(station.getName());
 
-        // Set subtitle
         String subtitle = station.getSubtitle();
         if (subtitle != null && !subtitle.isEmpty()) {
             tvPlayerSubtitle.setText(subtitle);
@@ -154,7 +189,6 @@ public class PlayerActivity extends AppCompatActivity implements AudioService.Pl
             tvPlayerSubtitle.setVisibility(View.GONE);
         }
 
-        // Set genre
         if (station.getGenre() != null && !station.getGenre().isEmpty()) {
             tvPlayerGenre.setText(station.getGenre());
             tvPlayerGenre.setVisibility(View.VISIBLE);
@@ -162,7 +196,6 @@ public class PlayerActivity extends AppCompatActivity implements AudioService.Pl
             tvPlayerGenre.setVisibility(View.GONE);
         }
 
-        // Set description
         if (station.getDescription() != null && !station.getDescription().isEmpty()) {
             tvPlayerDescription.setText(station.getDescription());
             tvPlayerDescription.setVisibility(View.VISIBLE);
@@ -170,7 +203,6 @@ public class PlayerActivity extends AppCompatActivity implements AudioService.Pl
             tvPlayerDescription.setVisibility(View.GONE);
         }
 
-        // Set frequency/location
         StringBuilder freqInfo = new StringBuilder();
         String frequency = station.getFrequency();
         String location = station.getLocation();
@@ -186,7 +218,6 @@ public class PlayerActivity extends AppCompatActivity implements AudioService.Pl
             tvPlayerFrequency.setVisibility(View.GONE);
         }
 
-        // Load cover image
         String coverImage = station.getCoverImage();
         if (coverImage != null && !coverImage.isEmpty()) {
             Glide.with(this)
@@ -204,24 +235,15 @@ public class PlayerActivity extends AppCompatActivity implements AudioService.Pl
                     .into(ivBackground);
         }
 
-        // Update favorite button
         updateFavoriteButton();
-
-        // Update station counter
         updateStationCounter();
     }
 
-    /**
-     * Play a new station and update UI
-     */
     private void playStation(Station station) {
         if (station == null || !station.isPlayable()) return;
-
         currentStation = station;
         String playbackUrl = station.getPlaybackUrl();
-
         Log.d(TAG, "Playing: " + station.getName() + " | URL: " + playbackUrl);
-
         audioService.play(playbackUrl);
         loadStationUI(station);
         updatePlayPauseButton();
@@ -332,7 +354,6 @@ public class PlayerActivity extends AppCompatActivity implements AudioService.Pl
             return true;
         }
         if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER) {
-            // Let the focused button handle it
             return super.onKeyDown(keyCode, event);
         }
         if (keyCode == KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE) {

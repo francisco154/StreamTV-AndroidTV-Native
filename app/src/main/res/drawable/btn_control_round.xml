@@ -1,21 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Round control button with OVAL focus selector (not square!) -->
+<!-- Pure circular control button - NO rectangles at all.
+     Focus: circular glow ring + scale. Normal: subtle transparent circle. -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Focused: blue glow circle with stroke -->
     <item android:state_focused="true">
         <shape android:shape="oval">
-            <solid android:color="#2A3B82F6" />
-            <stroke android:width="3dp" android:color="@color/accent_blue" />
+            <solid android:color="#303B82F6" />
+            <stroke android:width="2.5dp" android:color="#803B82F6" />
         </shape>
     </item>
+    <!-- Pressed: slightly brighter circle -->
     <item android:state_pressed="true">
         <shape android:shape="oval">
-            <solid android:color="#1A3B82F6" />
-            <stroke android:width="2dp" android:color="@color/accent_blue" />
+            <solid android:color="#253B82F6" />
+            <stroke android:width="1.5dp" android:color="#553B82F6" />
         </shape>
     </item>
+    <!-- Normal: barely visible circle -->
     <item>
         <shape android:shape="oval">
-            <solid android:color="#1AFFFFFF" />
+            <solid android:color="#14FFFFFF" />
         </shape>
     </item>
 </selector>

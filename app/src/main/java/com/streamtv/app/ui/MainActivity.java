@@ -1,9 +1,11 @@
 package com.streamtv.app.ui;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewOutlineProvider;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -133,6 +135,11 @@ public class MainActivity extends AppCompatActivity implements AudioService.Play
             else nowPlayingBar.setBackgroundColor(0xFF0D0D1F);
         });
 
+        // Kill rectangular highlights on bar buttons
+        setupCircularBarButton(npPlayPause);
+        setupCircularBarButton(npPrev);
+        setupCircularBarButton(npNext);
+
         npPlayPause.setOnClickListener(v -> togglePlayPause());
         npPrev.setOnClickListener(v -> playPreviousInBar());
         npNext.setOnClickListener(v -> playNextInBar());
@@ -144,6 +151,36 @@ public class MainActivity extends AppCompatActivity implements AudioService.Play
         // Fetch data
         dataFetcher = new DataFetcher();
         loadData();
+    }
+
+    /**
+     * Kill ALL rectangular highlights on a circular button.
+     * Forces circular outline, removes system focus highlight, kills Material shadows.
+     */
+    private void setupCircularBarButton(ImageButton btn) {
+        btn.setDefaultFocusHighlightEnabled(false);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            btn.setStateListAnimator(null);
+            btn.setElevation(0f);
+            btn.setTranslationZ(0f);
+            btn.setOutlineProvider(new ViewOutlineProvider() {
+                @Override
+                public void getOutline(View view, android.graphics.Outline outline) {
+                    int w = view.getWidth();
+                    int h = view.getHeight();
+                    if (w > 0 && h > 0) {
+                        int r = Math.min(w, h) / 2;
+                        outline.setOval(0, 0, r * 2, r * 2);
+                    }
+                }
+            });
+            btn.setClipToOutline(true);
+        }
+        btn.setOnFocusChangeListener((v, hasFocus) -> {
+            float scale = hasFocus ? 1.15f : 1.0f;
+            v.animate().scaleX(scale).scaleY(scale).alpha(hasFocus ? 1.0f : 0.7f).setDuration(200).start();
+        });
+        btn.setAlpha(0.7f);
     }
 
     private void setupTabFocus(TextView tab, int tabIndex) {
