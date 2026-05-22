@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Professional card background WITHOUT solid fill (so images show through) -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_focused="true">
+        <shape android:shape="rectangle">
+            <solid android:color="#FF1E1E3A" />
+            <corners android:radius="14dp" />
+            <stroke android:width="3dp" android:color="@color/accent_blue" />
+        </shape>
+    </item>
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="#FF1E1E3A" />
+            <corners android:radius="14dp" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#FF141428" />
+            <corners android:radius="14dp" />
+        </shape>
+    </item>
+</selector>

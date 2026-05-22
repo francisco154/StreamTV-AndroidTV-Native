@@ -62,10 +62,12 @@ public class StationAdapter extends RecyclerView.Adapter<StationAdapter.ViewHold
 
         // Subtitle info
         if (isSongMode) {
-            // Song mode: show artist
+            // Song mode: artist
             String artist = station.getArtist();
-            holder.tvArtist.setText(artist != null ? artist : "");
-            holder.tvArtist.setVisibility(artist != null && !artist.isEmpty() ? View.VISIBLE : View.GONE);
+            if (holder.tvArtist != null) {
+                holder.tvArtist.setText(artist != null ? artist : "");
+                holder.tvArtist.setVisibility(artist != null && !artist.isEmpty() ? View.VISIBLE : View.GONE);
+            }
 
             // Mood badge
             if (holder.tvMood != null) {
@@ -88,11 +90,24 @@ public class StationAdapter extends RecyclerView.Adapter<StationAdapter.ViewHold
                     holder.tvDuration.setVisibility(View.GONE);
                 }
             }
+
+            // Genre badge (for PREMIUM/NORMAL)
+            if (holder.tvGenre != null) {
+                String genre = station.getGenre();
+                if (genre != null && !genre.isEmpty() && "PREMIUM".equals(genre)) {
+                    holder.tvGenre.setVisibility(View.VISIBLE);
+                    holder.tvGenre.setText("PREMIUM");
+                } else {
+                    holder.tvGenre.setVisibility(View.GONE);
+                }
+            }
         } else {
-            // Radio mode: show frequency + location
+            // Radio mode: frequency + location
             String subtitle = station.getSubtitle();
-            holder.tvFrequency.setText(subtitle);
-            holder.tvFrequency.setVisibility(subtitle.isEmpty() ? View.GONE : View.VISIBLE);
+            if (holder.tvFrequency != null) {
+                holder.tvFrequency.setText(subtitle);
+                holder.tvFrequency.setVisibility(subtitle.isEmpty() ? View.GONE : View.VISIBLE);
+            }
 
             // Genre badge
             if (holder.tvGenre != null) {
@@ -105,13 +120,13 @@ public class StationAdapter extends RecyclerView.Adapter<StationAdapter.ViewHold
                 }
             }
 
-            // Stream type indicator
+            // Stream type badge
             if (holder.tvStreamType != null) {
                 String st = station.getStreamType();
                 if (st != null && !st.isEmpty()) {
                     holder.tvStreamType.setVisibility(View.VISIBLE);
                     if ("youtube".equals(st)) {
-                        holder.tvStreamType.setText("YouTube");
+                        holder.tvStreamType.setText("YT");
                     } else {
                         holder.tvStreamType.setText(st.toUpperCase());
                     }
@@ -119,58 +134,67 @@ public class StationAdapter extends RecyclerView.Adapter<StationAdapter.ViewHold
                     holder.tvStreamType.setVisibility(View.GONE);
                 }
             }
+
+            // Featured star
+            if (holder.ivFeatured != null) {
+                holder.ivFeatured.setVisibility(station.isFeatured() ? View.VISIBLE : View.GONE);
+            }
+
+            // YouTube indicator
+            if (holder.ivYouTubeOverlay != null) {
+                holder.ivYouTubeOverlay.setVisibility(station.isYouTube() ? View.VISIBLE : View.GONE);
+            }
         }
 
-        // Load cover image with Glide - robust error handling
+        // Load cover image with Glide - use GlideApp for OkHttp integration
         String coverUrl = station.getCoverImage();
         if (coverUrl != null && !coverUrl.isEmpty()) {
-            Log.d(TAG, "Loading cover: " + coverUrl.substring(0, Math.min(60, coverUrl.length())));
-
-            Glide.with(holder.itemView.getContext())
+            Glide.with(holder.ivCover.getContext())
                     .load(coverUrl)
+                    .placeholder(R.drawable.ic_radio)
+                    .error(R.drawable.ic_radio)
+                    .centerCrop()
+                    .timeout(20000)
                     .listener(new RequestListener<Drawable>() {
                         @Override
                         public boolean onLoadFailed(@Nullable GlideException e, Object model,
                                                     Target<Drawable> target, boolean isFirstResource) {
-                            Log.w(TAG, "Glide load failed for " + station.getName() + ": " +
-                                    (e != null ? e.getMessage() : "unknown"));
-                            return false; // Let Glide handle the error placeholder
+                            Log.w(TAG, "Image failed: " + station.getName());
+                            return false;
                         }
 
                         @Override
                         public boolean onResourceReady(Drawable resource, Object model,
                                                        Target<Drawable> target, DataSource dataSource,
                                                        boolean isFirstResource) {
-                            Log.d(TAG, "Glide loaded OK: " + station.getName() + " from " + dataSource);
+                            Log.d(TAG, "Image OK: " + station.getName() + " from " + dataSource);
                             return false;
                         }
                     })
-                    .placeholder(R.drawable.ic_radio)
-                    .error(R.drawable.ic_radio)
-                    .centerCrop()
-                    .timeout(15000)
                     .into(holder.ivCover);
         } else {
-            holder.ivCover.setImageResource(R.drawable.ic_radio);
+            holder.ivCover.setImageResource(isSongMode ? R.drawable.ic_music : R.drawable.ic_radio);
         }
 
-        // YouTube overlay indicator
-        if (holder.ivYouTubeOverlay != null) {
-            holder.ivYouTubeOverlay.setVisibility(station.isYouTube() ? View.VISIBLE : View.GONE);
-        }
-
-        // Focus handling for TV D-pad
+        // Focus handling for TV D-pad - ONLY scale + border, NO foreground
         holder.itemView.setOnFocusChangeListener((v, hasFocus) -> {
+            // Show/hide play overlay
             if (holder.ivPlayOverlay != null) {
                 holder.ivPlayOverlay.setVisibility(hasFocus && station.isPlayable() ? View.VISIBLE : View.GONE);
             }
+
+            // Show/hide focus border
+            if (holder.focusBorder != null) {
+                holder.focusBorder.setVisibility(hasFocus ? View.VISIBLE : View.GONE);
+            }
+
+            // Scale animation
             if (hasFocus) {
-                v.setScaleX(1.05f);
-                v.setScaleY(1.05f);
-                v.setElevation(8f);
+                v.animate().scaleX(1.08f).scaleY(1.08f).setDuration(200).start();
+                v.setElevation(12f);
+                v.bringToFront();
             } else {
-                v.setScaleX(1.0f);
-                v.setScaleY(1.0f);
+                v.animate().scaleX(1.0f).scaleY(1.0f).setDuration(200).start();
                 v.setElevation(0f);
             }
         });
@@ -189,6 +213,8 @@ public class StationAdapter extends RecyclerView.Adapter<StationAdapter.ViewHold
         ImageView ivCover;
         ImageView ivPlayOverlay;
         ImageView ivYouTubeOverlay;
+        ImageView ivFeatured;
+        View focusBorder;
         TextView tvName;
         TextView tvFrequency;
         TextView tvGenre;
@@ -202,6 +228,8 @@ public class StationAdapter extends RecyclerView.Adapter<StationAdapter.ViewHold
             ivCover = itemView.findViewById(R.id.ivCover);
             ivPlayOverlay = itemView.findViewById(R.id.ivPlayOverlay);
             ivYouTubeOverlay = itemView.findViewById(R.id.ivYouTubeOverlay);
+            ivFeatured = itemView.findViewById(R.id.ivFeatured);
+            focusBorder = itemView.findViewById(R.id.focusBorder);
             tvName = itemView.findViewById(R.id.tvName);
             tvFrequency = itemView.findViewById(R.id.tvFrequency);
             tvGenre = itemView.findViewById(R.id.tvGenre);

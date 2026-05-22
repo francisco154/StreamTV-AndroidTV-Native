@@ -179,6 +179,15 @@ public class PlayerActivity extends AppCompatActivity implements AudioService.Pl
     }
 
     @Override
+    public void onLoadingChanged(boolean isLoading) {
+        runOnUiThread(() -> {
+            if (isLoading) {
+                tvStatus.setText("Conectando...");
+            }
+        });
+    }
+
+    @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
             finish();

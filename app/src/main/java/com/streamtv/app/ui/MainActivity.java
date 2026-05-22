@@ -289,6 +289,11 @@ public class MainActivity extends AppCompatActivity implements AudioService.Play
     }
 
     @Override
+    public void onLoadingChanged(boolean isLoading) {
+        // Can show buffering indicator if needed
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
         audioService.setStateListener(null);

@@ -5,31 +5,40 @@
     android:orientation="vertical"
     android:background="@color/bg_dark">
 
-    <!-- Header -->
+    <!-- Header Bar -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="64dp"
+        android:layout_height="56dp"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:paddingStart="32dp"
-        android:paddingEnd="32dp"
-        android:background="@color/bg_dark">
+        android:paddingStart="28dp"
+        android:paddingEnd="28dp"
+        android:background="#0D0D1F">
+
+        <!-- Logo / App Name -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Stream"
+            android:textColor="@color/white"
+            android:textSize="22sp"
+            android:fontFamily="sans-serif-bold" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="StreamTV"
-            android:textColor="@color/white"
-            android:textSize="24sp"
+            android:text="TV"
+            android:textColor="@color/accent_blue"
+            android:textSize="22sp"
             android:fontFamily="sans-serif-bold" />
 
         <TextView
             android:id="@+id/tvHeaderInfo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/text_secondary"
-            android:textSize="12sp"
-            android:layout_marginStart="12dp"
+            android:textColor="@color/text_hint"
+            android:textSize="11sp"
+            android:layout_marginStart="16dp"
             android:visibility="gone" />
 
         <View
@@ -37,44 +46,46 @@
             android:layout_height="0dp"
             android:layout_weight="1" />
 
-        <!-- Tabs -->
-        <LinearLayout
-            android:id="@+id/tabsContainer"
+        <!-- Tab: Radios -->
+        <TextView
+            android:id="@+id/tabRadios"
             android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:layout_height="36dp"
+            android:gravity="center"
+            android:text="Radios en Vivo"
+            android:textColor="@color/accent_blue"
+            android:textSize="14sp"
+            android:fontFamily="sans-serif-medium"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:background="@drawable/tab_selected_bg"
+            android:focusable="true"
+            android:clickable="true" />
 
-            <TextView
-                android:id="@+id/tabRadios"
-                style="@style/TabText.Active"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:text="Radios en Vivo"
-                android:focusable="true"
-                android:clickable="true" />
-
-            <TextView
-                android:id="@+id/tabDemos"
-                style="@style/TabText"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:text="Demos"
-                android:focusable="true"
-                android:clickable="true"
-                android:layout_marginStart="24dp" />
-
-        </LinearLayout>
+        <!-- Tab: Demos -->
+        <TextView
+            android:id="@+id/tabDemos"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:gravity="center"
+            android:text="Demos"
+            android:textColor="@color/text_hint"
+            android:textSize="14sp"
+            android:fontFamily="sans-serif-medium"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/tab_unselected_bg"
+            android:focusable="true"
+            android:clickable="true" />
 
     </LinearLayout>
 
-    <!-- Divider -->
+    <!-- Thin accent line -->
     <View
         android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@color/divider" />
+        android:layout_height="2dp"
+        android:background="@drawable/bg_gradient" />
 
     <!-- Content -->
     <FrameLayout
@@ -87,14 +98,18 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clipToPadding="false"
-            android:padding="16dp" />
+            android:paddingTop="16dp"
+            android:paddingBottom="16dp"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp" />
 
         <ProgressBar
             android:id="@+id/progressBar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:visibility="gone" />
+            android:visibility="gone"
+            android:indeterminateTint="@color/accent_blue" />
 
         <TextView
             android:id="@+id/tvError"
@@ -111,35 +126,42 @@
     <LinearLayout
         android:id="@+id/nowPlayingBar"
         android:layout_width="match_parent"
-        android:layout_height="72dp"
+        android:layout_height="64dp"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:paddingStart="24dp"
-        android:paddingEnd="24dp"
-        android:background="@color/bg_card"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:background="#0D0D1F"
         android:visibility="gone"
         android:focusable="true">
 
+        <!-- Thin gradient line on top -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:background="@drawable/bg_gradient" />
+
         <ImageView
             android:id="@+id/npCover"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
             android:scaleType="centerCrop"
-            android:src="@drawable/ic_radio" />
+            android:src="@drawable/ic_radio"
+            android:layout_marginStart="0dp" />
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:orientation="vertical"
-            android:layout_marginStart="16dp">
+            android:layout_marginStart="14dp">
 
             <TextView
                 android:id="@+id/npTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="@color/text_primary"
-                android:textSize="14sp"
+                android:textSize="13sp"
                 android:fontFamily="sans-serif-medium"
                 android:maxLines="1"
                 android:ellipsize="end" />
@@ -148,17 +170,28 @@
                 android:id="@+id/npSubtitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/text_secondary"
-                android:textSize="12sp"
+                android:textColor="@color/text_hint"
+                android:textSize="11sp"
                 android:maxLines="1"
                 android:ellipsize="end" />
 
         </LinearLayout>
 
+        <!-- Equalizer / Live indicator -->
+        <TextView
+            android:id="@+id/npLiveIndicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="EN VIVO"
+            android:textColor="@color/error_red"
+            android:textSize="9sp"
+            android:fontFamily="sans-serif-bold"
+            android:layout_marginEnd="12dp" />
+
         <ImageButton
             android:id="@+id/npPlayPause"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:background="@drawable/btn_play_control"
             android:src="@drawable/ic_pause"
             android:scaleType="center"
