@@ -21,7 +21,9 @@ import com.streamtv.app.R;
 import com.streamtv.app.adapter.StationAdapter;
 import com.streamtv.app.model.CategoriesResponse;
 import com.streamtv.app.model.Category;
+import com.streamtv.app.model.FavoritesManager;
 import com.streamtv.app.model.Station;
+import com.streamtv.app.model.StationListHolder;
 import com.streamtv.app.network.AudioService;
 import com.streamtv.app.network.DataFetcher;
 
@@ -38,25 +40,33 @@ public class MainActivity extends AppCompatActivity implements AudioService.Play
     private TextView tvHeaderInfo;
 
     // Tabs
-    private TextView tabRadios, tabDemos;
+    private TextView tabRadios, tabDemos, tabFavorites;
 
     // Now playing bar
     private LinearLayout nowPlayingBar;
     private ImageView npCover;
     private TextView npTitle, npSubtitle;
     private ImageButton npPlayPause;
+    private ImageButton npPrev;
+    private ImageButton npNext;
 
     // Data
     private DataFetcher dataFetcher;
     private CategoriesResponse categoriesData;
     private StationAdapter radioAdapter;
     private StationAdapter demoAdapter;
+    private StationAdapter favoriteAdapter;
     private AudioService audioService;
+    private FavoritesManager favoritesManager;
 
     // Current playing station (stored for player activity)
     private Station currentStation;
 
-    private int currentTab = 0; // 0 = radios, 1 = demos
+    // Station lists
+    private List<Station> radioStations = new ArrayList<>();
+    private List<Station> demoStations = new ArrayList<>();
+
+    private int currentTab = 0; // 0 = radios, 1 = demos, 2 = favorites
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,11 +87,14 @@ public class MainActivity extends AppCompatActivity implements AudioService.Play
         tvHeaderInfo = findViewById(R.id.tvHeaderInfo);
         tabRadios = findViewById(R.id.tabRadios);
         tabDemos = findViewById(R.id.tabDemos);
+        tabFavorites = findViewById(R.id.tabFavorites);
         nowPlayingBar = findViewById(R.id.nowPlayingBar);
         npCover = findViewById(R.id.npCover);
         npTitle = findViewById(R.id.npTitle);
         npSubtitle = findViewById(R.id.npSubtitle);
         npPlayPause = findViewById(R.id.npPlayPause);
+        npPrev = findViewById(R.id.npPrev);
+        npNext = findViewById(R.id.npNext);
 
         // Setup recycler with 5 columns
         GridLayoutManager layoutManager = new GridLayoutManager(this, 5);
@@ -95,15 +108,21 @@ public class MainActivity extends AppCompatActivity implements AudioService.Play
         // Setup adapters
         radioAdapter = new StationAdapter(false, this::onStationClicked);
         demoAdapter = new StationAdapter(true, this::onStationClicked);
+        favoriteAdapter = new StationAdapter(false, this::onStationClicked);
         recyclerView.setAdapter(radioAdapter);
+
+        // Favorites manager
+        favoritesManager = FavoritesManager.getInstance(this);
 
         // Tab click listeners
         tabRadios.setOnClickListener(v -> switchTab(0));
         tabDemos.setOnClickListener(v -> switchTab(1));
+        tabFavorites.setOnClickListener(v -> switchTab(2));
 
         // Tab focus handling
         setupTabFocus(tabRadios, 0);
         setupTabFocus(tabDemos, 1);
+        setupTabFocus(tabFavorites, 2);
 
         // Now playing bar - clicking opens player
         nowPlayingBar.setOnClickListener(v -> {
@@ -111,10 +130,12 @@ public class MainActivity extends AppCompatActivity implements AudioService.Play
         });
         nowPlayingBar.setOnFocusChangeListener((v, hasFocus) -> {
             if (hasFocus) nowPlayingBar.setBackgroundColor(0xFF252545);
-            else nowPlayingBar.setBackgroundColor(0xFF1A1A2E);
+            else nowPlayingBar.setBackgroundColor(0xFF0D0D1F);
         });
 
         npPlayPause.setOnClickListener(v -> togglePlayPause());
+        npPrev.setOnClickListener(v -> playPreviousInBar());
+        npNext.setOnClickListener(v -> playNextInBar());
 
         // Audio service
         audioService = AudioService.getInstance(this);
@@ -161,24 +182,24 @@ public class MainActivity extends AppCompatActivity implements AudioService.Play
                 }
 
                 // Populate radio stations (including YouTube ones - shown but marked)
-                List<Station> allRadios = new ArrayList<>();
+                radioStations = new ArrayList<>();
                 for (Category cat : data.getCategories()) {
                     if ("Radios en Vivo".equals(cat.getName()) && cat.getStations() != null) {
-                        allRadios.addAll(cat.getStations());
+                        radioStations.addAll(cat.getStations());
                     }
                 }
-                radioAdapter.setStations(allRadios);
-                Log.d(TAG, "Loaded " + allRadios.size() + " radio stations");
+                radioAdapter.setStations(radioStations);
+                Log.d(TAG, "Loaded " + radioStations.size() + " radio stations");
 
                 // Populate demo songs
-                List<Station> allDemos = new ArrayList<>();
+                demoStations = new ArrayList<>();
                 for (Category cat : data.getCategories()) {
                     if ("Demos".equals(cat.getName()) && cat.getStations() != null) {
-                        allDemos.addAll(cat.getStations());
+                        demoStations.addAll(cat.getStations());
                     }
                 }
-                demoAdapter.setStations(allDemos);
-                Log.d(TAG, "Loaded " + allDemos.size() + " demo songs");
+                demoAdapter.setStations(demoStations);
+                Log.d(TAG, "Loaded " + demoStations.size() + " demo songs");
             }
 
             @Override
@@ -193,15 +214,42 @@ public class MainActivity extends AppCompatActivity implements AudioService.Play
 
     private void switchTab(int tab) {
         currentTab = tab;
+        tabRadios.setTextColor(getColor(tab == 0 ? R.color.tab_active : R.color.tab_inactive));
+        tabDemos.setTextColor(getColor(tab == 1 ? R.color.tab_active : R.color.tab_inactive));
+        tabFavorites.setTextColor(getColor(tab == 2 ? R.color.tab_active : R.color.tab_inactive));
+
         if (tab == 0) {
-            tabRadios.setTextColor(getColor(R.color.tab_active));
-            tabDemos.setTextColor(getColor(R.color.tab_inactive));
             recyclerView.setAdapter(radioAdapter);
-        } else {
-            tabRadios.setTextColor(getColor(R.color.tab_inactive));
-            tabDemos.setTextColor(getColor(R.color.tab_active));
+        } else if (tab == 1) {
             recyclerView.setAdapter(demoAdapter);
+        } else {
+            // Favorites tab: combine radios + demos that are favorited
+            List<Station> allStations = new ArrayList<>();
+            allStations.addAll(radioStations);
+            allStations.addAll(demoStations);
+            List<Station> favStations = favoritesManager.getFavoriteStations(allStations);
+            favoriteAdapter.setStations(favStations);
+            recyclerView.setAdapter(favoriteAdapter);
         }
+    }
+
+    private List<Station> getCurrentStationList() {
+        if (currentTab == 0) return radioStations;
+        if (currentTab == 1) return demoStations;
+        // For favorites, get the filtered list
+        List<Station> allStations = new ArrayList<>();
+        allStations.addAll(radioStations);
+        allStations.addAll(demoStations);
+        return favoritesManager.getFavoriteStations(allStations);
+    }
+
+    private int findStationIndex(List<Station> stations, Station station) {
+        for (int i = 0; i < stations.size(); i++) {
+            if (stations.get(i).getName() != null && stations.get(i).getName().equals(station.getName())) {
+                return i;
+            }
+        }
+        return 0;
     }
 
     private void onStationClicked(Station station) {
@@ -217,6 +265,11 @@ public class MainActivity extends AppCompatActivity implements AudioService.Play
         }
 
         Log.d(TAG, "Playing: " + station.getName() + " | URL: " + playbackUrl);
+
+        // Store station list and index in holder for prev/next navigation
+        List<Station> currentList = getCurrentStationList();
+        int index = findStationIndex(currentList, station);
+        StationListHolder.setStations(currentList, index);
 
         // Play the stream using ExoPlayer
         audioService.play(playbackUrl);
@@ -273,6 +326,26 @@ public class MainActivity extends AppCompatActivity implements AudioService.Play
         }
     }
 
+    private void playPreviousInBar() {
+        Station prev = StationListHolder.getPreviousStation();
+        if (prev != null) {
+            currentStation = prev;
+            audioService.play(prev.getPlaybackUrl());
+            updateNowPlaying(prev);
+            Toast.makeText(this, "Anterior: " + prev.getName(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void playNextInBar() {
+        Station next = StationListHolder.getNextStation();
+        if (next != null) {
+            currentStation = next;
+            audioService.play(next.getPlaybackUrl());
+            updateNowPlaying(next);
+            Toast.makeText(this, "Siguiente: " + next.getName(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
     @Override
     public void onStateChanged(boolean isPlaying) {
         runOnUiThread(() -> {
@@ -308,6 +381,11 @@ public class MainActivity extends AppCompatActivity implements AudioService.Play
             npPlayPause.setImageResource(audioService.isPlaying() ? R.drawable.ic_pause : R.drawable.ic_play);
         } else {
             nowPlayingBar.setVisibility(View.GONE);
+        }
+
+        // Refresh favorites tab if active
+        if (currentTab == 2) {
+            switchTab(2);
         }
     }
 

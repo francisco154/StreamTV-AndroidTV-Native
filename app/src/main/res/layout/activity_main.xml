@@ -79,6 +79,23 @@
             android:focusable="true"
             android:clickable="true" />
 
+        <!-- Tab: Favorites -->
+        <TextView
+            android:id="@+id/tabFavorites"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:gravity="center"
+            android:text="Favoritos"
+            android:textColor="@color/text_hint"
+            android:textSize="14sp"
+            android:fontFamily="sans-serif-medium"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/tab_unselected_bg"
+            android:focusable="true"
+            android:clickable="true" />
+
     </LinearLayout>
 
     <!-- Thin accent line -->
@@ -135,19 +152,12 @@
         android:visibility="gone"
         android:focusable="true">
 
-        <!-- Thin gradient line on top -->
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="2dp"
-            android:background="@drawable/bg_gradient" />
-
         <ImageView
             android:id="@+id/npCover"
             android:layout_width="44dp"
             android:layout_height="44dp"
             android:scaleType="centerCrop"
-            android:src="@drawable/ic_radio"
-            android:layout_marginStart="0dp" />
+            android:src="@drawable/ic_radio" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -188,15 +198,43 @@
             android:fontFamily="sans-serif-bold"
             android:layout_marginEnd="12dp" />
 
+        <!-- Previous button -->
+        <ImageButton
+            android:id="@+id/npPrev"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="@drawable/btn_control_round"
+            android:src="@drawable/ic_skip_previous"
+            android:scaleType="center"
+            android:focusable="true"
+            android:defaultFocusHighlightEnabled="false"
+            android:contentDescription="Anterior" />
+
+        <!-- Play/Pause button -->
         <ImageButton
             android:id="@+id/npPlayPause"
             android:layout_width="36dp"
             android:layout_height="36dp"
-            android:background="@drawable/btn_play_control"
+            android:background="@drawable/btn_control_round"
             android:src="@drawable/ic_pause"
             android:scaleType="center"
+            android:layout_marginStart="8dp"
             android:focusable="true"
+            android:defaultFocusHighlightEnabled="false"
             android:contentDescription="@string/play" />
+
+        <!-- Next button -->
+        <ImageButton
+            android:id="@+id/npNext"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="@drawable/btn_control_round"
+            android:src="@drawable/ic_skip_next"
+            android:scaleType="center"
+            android:layout_marginStart="8dp"
+            android:focusable="true"
+            android:defaultFocusHighlightEnabled="false"
+            android:contentDescription="Siguiente" />
 
     </LinearLayout>
 

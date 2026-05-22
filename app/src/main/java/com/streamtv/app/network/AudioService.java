@@ -78,7 +78,7 @@ public class AudioService {
 
         // Create custom HTTP DataSource with proper User-Agent for redirects
         DefaultHttpDataSource.Factory httpDataSourceFactory = new DefaultHttpDataSource.Factory()
-                .setUserAgent("StreamTV/3.0 (Android)")
+                .setUserAgent("StreamTV/4.0 (Android)")
                 .setConnectTimeoutMs(15000)
                 .setReadTimeoutMs(15000)
                 .setAllowCrossProtocolRedirects(true);

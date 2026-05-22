@@ -110,7 +110,17 @@
                 android:layout_marginTop="16dp"
                 android:text="Conectando..." />
 
-            <!-- Controls -->
+            <!-- Station counter (e.g. "3 / 22") -->
+            <TextView
+                android:id="@+id/tvStationCounter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/accent_purple"
+                android:textSize="12sp"
+                android:layout_marginTop="4dp"
+                android:visibility="gone" />
+
+            <!-- Controls Row -->
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -118,15 +128,60 @@
                 android:layout_marginTop="24dp"
                 android:gravity="center_vertical">
 
+                <!-- Previous button -->
+                <ImageButton
+                    android:id="@+id/btnPrevious"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:background="@drawable/btn_control_round"
+                    android:src="@drawable/ic_skip_previous"
+                    android:scaleType="center"
+                    android:focusable="true"
+                    android:defaultFocusHighlightEnabled="false"
+                    android:contentDescription="Anterior" />
+
+                <!-- Play/Pause button (larger, center) -->
                 <ImageButton
                     android:id="@+id/btnPlayPause"
                     android:layout_width="72dp"
                     android:layout_height="72dp"
-                    android:background="@drawable/btn_play_control"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginEnd="12dp"
+                    android:background="@drawable/btn_control_round"
                     android:src="@drawable/ic_pause"
                     android:scaleType="center"
                     android:focusable="true"
+                    android:defaultFocusHighlightEnabled="false"
                     android:contentDescription="@string/play" />
+
+                <!-- Next button -->
+                <ImageButton
+                    android:id="@+id/btnNext"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:background="@drawable/btn_control_round"
+                    android:src="@drawable/ic_skip_next"
+                    android:scaleType="center"
+                    android:focusable="true"
+                    android:defaultFocusHighlightEnabled="false"
+                    android:contentDescription="Siguiente" />
+
+                <!-- Spacer -->
+                <View
+                    android:layout_width="24dp"
+                    android:layout_height="0dp" />
+
+                <!-- Favorite button -->
+                <ImageButton
+                    android:id="@+id/btnFavorite"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:background="@drawable/btn_control_round"
+                    android:src="@drawable/ic_favorite_outline"
+                    android:scaleType="center"
+                    android:focusable="true"
+                    android:defaultFocusHighlightEnabled="false"
+                    android:contentDescription="Favorito" />
 
             </LinearLayout>
 
