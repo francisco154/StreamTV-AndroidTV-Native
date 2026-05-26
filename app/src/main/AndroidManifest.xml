@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -24,6 +25,7 @@
             android:name=".ui.SplashActivity"
             android:exported="true"
             android:screenOrientation="landscape"
+            android:keepScreenOn="true"
             android:theme="@style/Theme.StreamTV.Splash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -35,18 +37,40 @@
         <activity
             android:name=".ui.LoginActivity"
             android:exported="false"
-            android:screenOrientation="landscape" />
+            android:screenOrientation="landscape"
+            android:keepScreenOn="true" />
 
         <activity
             android:name=".ui.MainActivity"
             android:exported="false"
-            android:screenOrientation="landscape" />
+            android:screenOrientation="landscape"
+            android:keepScreenOn="true" />
 
         <activity
             android:name=".ui.PlayerActivity"
             android:exported="false"
             android:screenOrientation="landscape"
             android:keepScreenOn="true" />
+
+        <!-- BroadcastReceiver for remote control commands from MediaCenter -->
+        <receiver
+            android:name=".remote.RemoteControlReceiver"
+            android:exported="true"
+            tools:ignore="ExportedReceiver">
+            <intent-filter>
+                <action android:name="com.radioplayer.tv.OTP_PAIR" />
+                <action android:name="com.radioplayer.tv.COMMAND_PLAY" />
+                <action android:name="com.radioplayer.tv.COMMAND_PAUSE" />
+                <action android:name="com.radioplayer.tv.COMMAND_PLAY_PAUSE" />
+                <action android:name="com.radioplayer.tv.COMMAND_NEXT" />
+                <action android:name="com.radioplayer.tv.COMMAND_PREVIOUS" />
+                <action android:name="com.radioplayer.tv.COMMAND_FAVORITE" />
+                <action android:name="com.radioplayer.tv.COMMAND_STOP" />
+                <action android:name="com.radioplayer.tv.COMMAND_VOLUME_UP" />
+                <action android:name="com.radioplayer.tv.COMMAND_VOLUME_DOWN" />
+                <action android:name="com.radioplayer.tv.REQUEST_STATUS" />
+            </intent-filter>
+        </receiver>
 
     </application>
 </manifest>

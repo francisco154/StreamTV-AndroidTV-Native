@@ -10,16 +10,16 @@ android {
         applicationId "com.streamtv.app"
         minSdk 21
         targetSdk 36
-        versionCode 9
-        versionName "4.1"
+        versionCode 10
+        versionName "5.5"
     }
 
     signingConfigs {
         release {
             storeFile file('../streamtv-release.keystore')
-            storePassword 'streamtv123'
-            keyAlias 'streamtv'
-            keyPassword 'streamtv123'
+            storePassword 'radioplayer2025'
+            keyAlias 'radioplayer'
+            keyPassword 'radioplayer2025'
         }
     }
 

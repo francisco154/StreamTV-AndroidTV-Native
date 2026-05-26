@@ -21,6 +21,8 @@ import com.streamtv.app.model.FavoritesManager;
 import com.streamtv.app.model.Station;
 import com.streamtv.app.model.StationListHolder;
 import com.streamtv.app.network.AudioService;
+import com.streamtv.app.remote.OtpManager;
+import com.streamtv.app.remote.RemoteControlReceiver;
 
 public class PlayerActivity extends AppCompatActivity implements AudioService.PlayerStateListener {
 
@@ -105,27 +107,15 @@ public class PlayerActivity extends AppCompatActivity implements AudioService.Pl
 
     /**
      * Force a circular outline and eliminate ALL rectangular highlights.
-     * This is the KEY method that kills the rectangle:
-     * - Sets outlineProvider to NONE (no system outline)
-     * - Disables default focus highlight
-     * - Removes stateListAnimator (Material shadows)
-     * - Sets circular clip outline for the background
-     * - Adds smooth scale animation on focus
      */
     private void setupCircularButton(ImageButton btn, float focusScale) {
-        // Kill default Android TV focus highlight rectangle
         btn.setDefaultFocusHighlightEnabled(false);
-
-        // Kill Material stateListAnimator (causes rectangular elevation shadow)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             btn.setStateListAnimator(null);
             btn.setOutlineProvider(ViewOutlineProvider.BOUNDS);
-            // Set elevation to 0 to prevent shadow rectangle
             btn.setElevation(0f);
             btn.setTranslationZ(0f);
         }
-
-        // Set circular clip outline matching the button's oval background
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             btn.setClipToOutline(true);
             btn.setOutlineProvider(new ViewOutlineProvider() {
@@ -134,15 +124,12 @@ public class PlayerActivity extends AppCompatActivity implements AudioService.Pl
                     int w = view.getWidth();
                     int h = view.getHeight();
                     if (w > 0 && h > 0) {
-                        // Use the smaller dimension for a perfect circle
                         int r = Math.min(w, h) / 2;
                         outline.setOval(0, 0, r * 2, r * 2);
                     }
                 }
             });
         }
-
-        // Focus change: only scale + slight alpha, NO rectangles
         btn.setOnFocusChangeListener((v, hasFocus) -> {
             float scale = hasFocus ? focusScale : 1.0f;
             v.animate()
@@ -152,14 +139,9 @@ public class PlayerActivity extends AppCompatActivity implements AudioService.Pl
                     .setDuration(200)
                     .start();
         });
-
-        // Start with dimmed unfocused state
         btn.setAlpha(0.7f);
     }
 
-    /**
-     * Build a Station object from intent extras (fallback)
-     */
     private Station buildStationFromIntent() {
         Station station = new Station();
         station.setName(getIntent().getStringExtra("name"));
@@ -175,9 +157,6 @@ public class PlayerActivity extends AppCompatActivity implements AudioService.Pl
         return station;
     }
 
-    /**
-     * Load all UI elements for a given station
-     */
     private void loadStationUI(Station station) {
         if (station.getName() != null) tvPlayerTitle.setText(station.getName());
 
@@ -247,6 +226,7 @@ public class PlayerActivity extends AppCompatActivity implements AudioService.Pl
         audioService.play(playbackUrl);
         loadStationUI(station);
         updatePlayPauseButton();
+        RemoteControlReceiver.sendPlaybackUpdate(this);
     }
 
     private void playPrevious() {
@@ -255,7 +235,7 @@ public class PlayerActivity extends AppCompatActivity implements AudioService.Pl
             playStation(prev);
             Toast.makeText(this, "Anterior: " + prev.getName(), Toast.LENGTH_SHORT).show();
         } else {
-            Toast.makeText(this, "No hay estación anterior", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "No hay estacion anterior", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -265,7 +245,7 @@ public class PlayerActivity extends AppCompatActivity implements AudioService.Pl
             playStation(next);
             Toast.makeText(this, "Siguiente: " + next.getName(), Toast.LENGTH_SHORT).show();
         } else {
-            Toast.makeText(this, "No hay estación siguiente", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "No hay estacion siguiente", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -278,6 +258,7 @@ public class PlayerActivity extends AppCompatActivity implements AudioService.Pl
         } else {
             Toast.makeText(this, "Eliminado de favoritos", Toast.LENGTH_SHORT).show();
         }
+        RemoteControlReceiver.sendPlaybackUpdate(this);
     }
 
     private void updateFavoriteButton() {
@@ -306,6 +287,7 @@ public class PlayerActivity extends AppCompatActivity implements AudioService.Pl
             audioService.resume();
             tvStatus.setText("Reproduciendo...");
         }
+        RemoteControlReceiver.sendPlaybackUpdate(this);
     }
 
     private void updatePlayPauseButton() {
@@ -327,6 +309,7 @@ public class PlayerActivity extends AppCompatActivity implements AudioService.Pl
         runOnUiThread(() -> {
             btnPlayPause.setImageResource(isPlaying ? R.drawable.ic_pause : R.drawable.ic_play);
             tvStatus.setText(isPlaying ? "En vivo" : "Pausado");
+            RemoteControlReceiver.sendPlaybackUpdate(PlayerActivity.this);
         });
     }
 

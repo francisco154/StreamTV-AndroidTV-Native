@@ -3,6 +3,8 @@ package com.streamtv.app.ui;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewOutlineProvider;
@@ -28,6 +30,8 @@ import com.streamtv.app.model.Station;
 import com.streamtv.app.model.StationListHolder;
 import com.streamtv.app.network.AudioService;
 import com.streamtv.app.network.DataFetcher;
+import com.streamtv.app.remote.OtpManager;
+import com.streamtv.app.remote.RemoteControlReceiver;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,6 +56,15 @@ public class MainActivity extends AppCompatActivity implements AudioService.Play
     private ImageButton npPrev;
     private ImageButton npNext;
 
+    // OTP / Remote control
+    private LinearLayout otpPanel;
+    private TextView tvOtpCode;
+    private TextView tvOtpTimer;
+    private TextView tvOtpStatus;
+    private TextView tvPairedInfo;
+    private Handler otpHandler = new Handler(Looper.getMainLooper());
+    private Runnable otpRefreshRunnable;
+
     // Data
     private DataFetcher dataFetcher;
     private CategoriesResponse categoriesData;
@@ -60,6 +73,7 @@ public class MainActivity extends AppCompatActivity implements AudioService.Play
     private StationAdapter favoriteAdapter;
     private AudioService audioService;
     private FavoritesManager favoritesManager;
+    private OtpManager otpManager;
 
     // Current playing station (stored for player activity)
     private Station currentStation;
@@ -98,6 +112,13 @@ public class MainActivity extends AppCompatActivity implements AudioService.Play
         npPrev = findViewById(R.id.npPrev);
         npNext = findViewById(R.id.npNext);
 
+        // OTP views
+        otpPanel = findViewById(R.id.otpPanel);
+        tvOtpCode = findViewById(R.id.tvOtpCode);
+        tvOtpTimer = findViewById(R.id.tvOtpTimer);
+        tvOtpStatus = findViewById(R.id.tvOtpStatus);
+        tvPairedInfo = findViewById(R.id.tvPairedInfo);
+
         // Setup recycler with 5 columns
         GridLayoutManager layoutManager = new GridLayoutManager(this, 5);
         recyclerView.setLayoutManager(layoutManager);
@@ -115,6 +136,10 @@ public class MainActivity extends AppCompatActivity implements AudioService.Play
 
         // Favorites manager
         favoritesManager = FavoritesManager.getInstance(this);
+
+        // OTP Manager
+        otpManager = OtpManager.getInstance(this);
+        setupOtpPanel();
 
         // Tab click listeners
         tabRadios.setOnClickListener(v -> switchTab(0));
@@ -148,14 +173,104 @@ public class MainActivity extends AppCompatActivity implements AudioService.Play
         audioService = AudioService.getInstance(this);
         audioService.setStateListener(this);
 
+        // Remote control listener
+        RemoteControlReceiver.setCommandListener(new RemoteControlReceiver.RemoteCommandListener() {
+            @Override
+            public void onPlaybackStateChanged() {
+                runOnUiThread(() -> {
+                    if (audioService.hasPlayer()) {
+                        nowPlayingBar.setVisibility(View.VISIBLE);
+                        npPlayPause.setImageResource(audioService.isPlaying() ? R.drawable.ic_pause : R.drawable.ic_play);
+                    }
+                    if (currentTab == 2) switchTab(2);
+                });
+            }
+
+            @Override
+            public void onDevicePaired(String deviceId) {
+                runOnUiThread(() -> {
+                    updateOtpPanel();
+                    Toast.makeText(MainActivity.this, "Dispositivo vinculado!", Toast.LENGTH_LONG).show();
+                });
+            }
+        });
+
         // Fetch data
         dataFetcher = new DataFetcher();
         loadData();
     }
 
+    private void setupOtpPanel() {
+        updateOtpPanel();
+
+        // Auto-refresh OTP timer display
+        otpRefreshRunnable = new Runnable() {
+            @Override
+            public void run() {
+                updateOtpTimer();
+                otpHandler.postDelayed(this, 1000);
+            }
+        };
+        otpHandler.post(otpRefreshRunnable);
+    }
+
+    private void updateOtpPanel() {
+        if (otpManager.isPaired()) {
+            // Show paired state
+            if (otpPanel != null) otpPanel.setVisibility(View.VISIBLE);
+            if (tvOtpCode != null) tvOtpCode.setVisibility(View.GONE);
+            if (tvOtpTimer != null) tvOtpTimer.setVisibility(View.GONE);
+            if (tvOtpStatus != null) {
+                tvOtpStatus.setText("TV Vinculada");
+                tvOtpStatus.setTextColor(getColor(R.color.accent_blue));
+                tvOtpStatus.setVisibility(View.VISIBLE);
+            }
+            if (tvPairedInfo != null) {
+                tvPairedInfo.setText("Control remoto activo");
+                tvPairedInfo.setVisibility(View.VISIBLE);
+            }
+        } else {
+            // Show OTP code
+            if (otpPanel != null) otpPanel.setVisibility(View.VISIBLE);
+            String otp = otpManager.getCurrentOtp();
+            if (tvOtpCode != null) {
+                tvOtpCode.setText(formatOtp(otp));
+                tvOtpCode.setVisibility(View.VISIBLE);
+            }
+            if (tvOtpTimer != null) tvOtpTimer.setVisibility(View.VISIBLE);
+            if (tvOtpStatus != null) {
+                tvOtpStatus.setText("Codigo de vinculacion");
+                tvOtpStatus.setTextColor(getColor(R.color.text_hint));
+                tvOtpStatus.setVisibility(View.VISIBLE);
+            }
+            if (tvPairedInfo != null) {
+                tvPairedInfo.setText("Ingresa este codigo en MediaCenter");
+                tvPairedInfo.setVisibility(View.VISIBLE);
+            }
+        }
+    }
+
+    private String formatOtp(String otp) {
+        if (otp == null || otp.length() != 6) return otp;
+        return otp.substring(0, 3) + " " + otp.substring(3);
+    }
+
+    private void updateOtpTimer() {
+        if (tvOtpTimer == null || otpManager.isPaired()) return;
+        long remaining = otpManager.getRemainingSeconds();
+        long mins = remaining / 60;
+        long secs = remaining % 60;
+        tvOtpTimer.setText(String.format("Expira en %d:%02d", mins, secs));
+
+        // Check if OTP expired and needs refresh
+        if (!otpManager.isOtpValid() && !otpManager.isPaired()) {
+            otpManager.generateOtp();
+            updateOtpPanel();
+        }
+    }
+
     /**
      * Kill ALL rectangular highlights on a circular button.
-     * Forces circular outline, removes system focus highlight, kills Material shadows.
      */
     private void setupCircularBarButton(ImageButton btn) {
         btn.setDefaultFocusHighlightEnabled(false);
@@ -243,7 +358,7 @@ public class MainActivity extends AppCompatActivity implements AudioService.Play
             public void onError(String message) {
                 progressBar.setVisibility(View.GONE);
                 tvError.setVisibility(View.VISIBLE);
-                tvError.setText("Error de conexión: " + message);
+                tvError.setText("Error de conexion: " + message);
                 Log.e(TAG, "Error loading data: " + message);
             }
         });
@@ -291,7 +406,7 @@ public class MainActivity extends AppCompatActivity implements AudioService.Play
 
     private void onStationClicked(Station station) {
         if (station.isYouTube()) {
-            Toast.makeText(this, "FM Luzu: Solo disponible vía YouTube", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "FM Luzu: Solo disponible via YouTube", Toast.LENGTH_LONG).show();
             return;
         }
 
@@ -319,6 +434,9 @@ public class MainActivity extends AppCompatActivity implements AudioService.Play
 
         // Open player activity
         openPlayerForStation(station);
+
+        // Send playback update to MediaCenter
+        RemoteControlReceiver.sendPlaybackUpdate(this);
     }
 
     private void updateNowPlaying(Station station) {
@@ -361,6 +479,7 @@ public class MainActivity extends AppCompatActivity implements AudioService.Play
             audioService.resume();
             npPlayPause.setImageResource(R.drawable.ic_pause);
         }
+        RemoteControlReceiver.sendPlaybackUpdate(this);
     }
 
     private void playPreviousInBar() {
@@ -371,6 +490,7 @@ public class MainActivity extends AppCompatActivity implements AudioService.Play
             updateNowPlaying(prev);
             Toast.makeText(this, "Anterior: " + prev.getName(), Toast.LENGTH_SHORT).show();
         }
+        RemoteControlReceiver.sendPlaybackUpdate(this);
     }
 
     private void playNextInBar() {
@@ -381,19 +501,21 @@ public class MainActivity extends AppCompatActivity implements AudioService.Play
             updateNowPlaying(next);
             Toast.makeText(this, "Siguiente: " + next.getName(), Toast.LENGTH_SHORT).show();
         }
+        RemoteControlReceiver.sendPlaybackUpdate(this);
     }
 
     @Override
     public void onStateChanged(boolean isPlaying) {
         runOnUiThread(() -> {
             npPlayPause.setImageResource(isPlaying ? R.drawable.ic_pause : R.drawable.ic_play);
+            RemoteControlReceiver.sendPlaybackUpdate(MainActivity.this);
         });
     }
 
     @Override
     public void onError(String message) {
         runOnUiThread(() -> {
-            Toast.makeText(this, "Error: " + message, Toast.LENGTH_LONG).show();
+            Toast.makeText(MainActivity.this, "Error: " + message, Toast.LENGTH_LONG).show();
             Log.e(TAG, "Player error: " + message);
         });
     }
@@ -407,6 +529,11 @@ public class MainActivity extends AppCompatActivity implements AudioService.Play
     protected void onDestroy() {
         super.onDestroy();
         audioService.setStateListener(null);
+        if (otpRefreshRunnable != null) {
+            otpHandler.removeCallbacks(otpRefreshRunnable);
+        }
+        otpManager.destroy();
+        RemoteControlReceiver.setCommandListener(null);
     }
 
     @Override
@@ -424,6 +551,9 @@ public class MainActivity extends AppCompatActivity implements AudioService.Play
         if (currentTab == 2) {
             switchTab(2);
         }
+
+        // Refresh OTP panel
+        updateOtpPanel();
     }
 
     /**
